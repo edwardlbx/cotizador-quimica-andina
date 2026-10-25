@@ -1,0 +1,30 @@
+# --- Nunca al repositorio: secretos ---
+.streamlit/secrets.toml
+neon*.txt
+*.env
+
+# --- Datos (aunque sean ficticios, no son código) ---
+entrada/*
+procesados/*
+!entrada/.gitkeep
+!procesados/.gitkeep
+respaldo*.sql
+respaldos/
+*.csv
+resumen_dia_*.txt
+
+# --- Archivos temporales ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+.vscode/
+
+# --- Archivos locales que no van al repositorio ---
+qa_06*.sql
+qa_07*.sql
+qa_08*.sql
+qa_12*.sql
+usuarios_app.txt
+secrets_streamlit.txt
+*.dump
