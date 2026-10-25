@@ -318,39 +318,50 @@ for k, v in {"lineas": VACIO.copy(), "editor_ver": 0, "hab_ver": 0, "pendiente":
     if k not in st.session_state:
         st.session_state[k] = v
 
-# --- Productos que el cliente ya compra (para elegir) ---
+# --- Productos que el cliente ha comprado (todo su historial, para elegir) ---
 if etiqueta_cli is not None:
     nit_sel = clientes.loc[clientes["etiqueta"] == etiqueta_cli, "cliente_id"].iloc[0]
     clave_hab = f"hab_{nit_sel}"
     if clave_hab not in st.session_state:          # se consulta una vez por cliente
+        # incluye las compras hechas con un NIT anterior del mismo cliente (cambio de NIT)
         h = consultar(cfg, """
             SELECT v.producto_id || ' - ' || p.nombre AS "Producto",
-                   count(DISTINCT v.numero_factura)  AS "Compras (12 m)",
+                   count(DISTINCT v.numero_factura)
+                     FILTER (WHERE v.fecha >= CURRENT_DATE - INTERVAL '12 months') AS "Compras (12 m)",
+                   count(DISTINCT v.numero_factura)  AS "Compras (total)",
                    max(v.fecha)                       AS "Última compra",
                    round(percentile_cont(0.5) WITHIN GROUP (ORDER BY v.cantidad)::numeric, 2) AS "Cant. típica",
                    (array_agg(v.precio_unitario ORDER BY v.fecha DESC))[1] AS "Último precio"
             FROM qa.v_ventas v JOIN qa.productos p USING (producto_id)
-            WHERE v.cliente_id = %s AND v.tipo = 'FV' AND p.estado = 'ACTIVO'
-              AND v.fecha >= CURRENT_DATE - INTERVAL '12 months'
-            GROUP BY 1 ORDER BY 2 DESC, 3 DESC""", (nit_sel,))
+            WHERE v.cliente_id IN (SELECT cliente_id FROM qa.v_clientes_consolidado WHERE cliente_vigente = %s
+                                   UNION SELECT %s)
+              AND v.tipo = 'FV' AND p.estado = 'ACTIVO'
+            GROUP BY 1 ORDER BY 2 DESC, 4 DESC""", (nit_sel, nit_sel))
         h.insert(0, "Agregar", False)
+        ultima = pd.to_datetime(h["Última compra"]).max() if not h.empty else None
         h["Cant. típica"] = h["Cant. típica"].map(num)
         h["Última compra"] = pd.to_datetime(h["Última compra"]).dt.strftime("%d/%m/%Y")
         h["Último precio"] = h["Último precio"].map(cop)
-        st.session_state[clave_hab] = h
-    hab = st.session_state[clave_hab]
+        st.session_state[clave_hab] = (h, ultima)
+    hab, ultima = st.session_state[clave_hab]
 
-    with st.expander(f"Productos que este cliente ya compra ({len(hab)})", expanded=False):
+    with st.expander(f"Productos que este cliente ha comprado ({len(hab)})", expanded=False):
         if hab.empty:
-            st.caption("Este cliente no tiene compras en los últimos 12 meses.")
+            st.caption("Este cliente todavía no tiene compras registradas.")
         else:
+            meses = (pd.Timestamp.today() - ultima).days // 30
+            if meses >= 12:
+                st.warning(f"Cliente sin compras hace {meses} meses (última: {ultima:%d/%m/%Y}). "
+                           "Los precios de esta tabla pueden estar desactualizados: el cotizador usa la lista vigente.")
+            else:
+                st.caption("Historial completo, ordenado por compras de los últimos 12 meses.")
             filtro = st.text_input("🔍 Buscar producto", key=f"filtro_{nit_sel}",
                                    placeholder="Código o nombre, ej.: 3275")
             visibles = hab[hab["Producto"].str.contains(filtro, case=False, regex=False)] if filtro else hab
             editado = st.data_editor(
                 visibles, hide_index=True, width="stretch",
                 height=min(38 * (len(visibles) + 1), 330),
-                disabled=["Producto", "Compras (12 m)", "Última compra", "Cant. típica", "Último precio"],
+                disabled=["Producto", "Compras (12 m)", "Compras (total)", "Última compra", "Cant. típica", "Último precio"],
                 column_config={
                     "Agregar": st.column_config.CheckboxColumn("Agregar", width="small"),
                     "Cant. típica": st.column_config.TextColumn(
