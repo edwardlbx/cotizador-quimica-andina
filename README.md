@@ -7,7 +7,7 @@ un distribuidor B2B de materias primas, construido con datos sintéticos que imi
 > 100 % ficticios y generados por `generar_datos.py`. El proyecto no contiene ni se basa en información
 > confidencial de ninguna empresa.
 
-**Demo:** _(enlace de Streamlit Cloud)_
+**Demo:** [cotizador-quimica-andina-demo.streamlit.app](https://cotizador-quimica-andina-demo.streamlit.app) (usuario de prueba disponible a solicitud)
 
 ## El problema
 Cotizar exigía cruzar a mano varias fuentes del ERP: lista de precios, precios especiales, última compra,

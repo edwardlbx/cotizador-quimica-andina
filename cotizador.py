@@ -345,7 +345,7 @@ if etiqueta_cli is not None:
             st.caption("Este cliente no tiene compras en los últimos 12 meses.")
         else:
             filtro = st.text_input("🔍 Buscar producto", key=f"filtro_{nit_sel}",
-                                   placeholder="Nombre o código, ej.: lulo, 3275")
+                                   placeholder="Código o nombre, ej.: 3275")
             visibles = hab[hab["Producto"].str.contains(filtro, case=False, regex=False)] if filtro else hab
             editado = st.data_editor(
                 visibles, hide_index=True, width="stretch",
