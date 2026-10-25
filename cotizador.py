@@ -354,7 +354,8 @@ if etiqueta_cli is not None:
                 st.warning(f"Cliente sin compras hace {meses} meses (última: {ultima:%d/%m/%Y}). "
                            "Los precios de esta tabla pueden estar desactualizados: el cotizador usa la lista vigente.")
             else:
-                st.caption("Historial completo, ordenado por compras de los últimos 12 meses.")
+                st.caption("Todo lo que ha comprado, desde su primera compra. Arriba lo más comprado en los últimos 12 meses; "
+                           "abajo lo que compraba antes (Compras 12 m = 0).")
             filtro = st.text_input("🔍 Buscar producto", key=f"filtro_{nit_sel}",
                                    placeholder="Código o nombre, ej.: 3275")
             visibles = hab[hab["Producto"].str.contains(filtro, case=False, regex=False)] if filtro else hab
