@@ -13,7 +13,7 @@ INSERT INTO qa.clientes_historial (cliente_id, vigente_desde, lista_precio, vend
 SELECT cliente_id, DATE '2000-01-01', lista_precio, vendedor_id FROM qa.clientes
 ON CONFLICT (cliente_id, vigente_desde) DO NOTHING;
 
--- 2) Cambio conocido: INDUSTRIAS VITAL LTDA tenía lista 2 hasta el 21/10 y lista 3 desde el 22/10
+-- 2) Cambio conocido: el cliente 844608971 tenía lista 2 hasta el 21/10 y lista 3 desde el 22/10
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM qa.clientes WHERE cliente_id = '844608971' AND lista_precio = 3)
@@ -23,7 +23,7 @@ BEGIN
     WHERE cliente_id = '844608971' AND vigente_desde = DATE '2000-01-01';
     INSERT INTO qa.clientes_historial (cliente_id, vigente_desde, lista_precio, vendedor_id)
     SELECT cliente_id, DATE '2026-10-22', 3, vendedor_id FROM qa.clientes WHERE cliente_id = '844608971';
-    RAISE NOTICE 'Historial de INDUSTRIAS VITAL: lista 2 hasta 21/10, lista 3 desde 22/10';
+    RAISE NOTICE 'Historial del cliente 844608971: lista 2 hasta 21/10, lista 3 desde 22/10';
   END IF;
 END $$;
 
